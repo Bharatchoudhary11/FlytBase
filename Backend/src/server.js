@@ -25,7 +25,6 @@ app.use('/drones', createDronesRouter(io));
 
 const missionsRouter = require('./routes/missions');
 
-const createDronesRouter = require('./routes/drones');
 
 app.use('/missions', missionsRouter);
 app.use('/drones', createDronesRouter(io));
