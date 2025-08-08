@@ -16,7 +16,12 @@ app.use(express.json());
 
 // Routes
 const missionsRouter = require('./routes/missions');
+
+const createDronesRouter = require('./routes/drones');
+
 app.use('/missions', missionsRouter);
+app.use('/drones', createDronesRouter(io));
+
 
 // Basic route to check server
 app.get("/", (req, res) => {
