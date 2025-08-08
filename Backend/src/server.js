@@ -18,16 +18,11 @@ app.use(express.json());
 
 const createMissionsRouter = require('./routes/missions');
 const createDronesRouter = require('./routes/drones');
+const reportsRouter = require('./routes/reports');
 
 app.use('/missions', createMissionsRouter(io));
 app.use('/drones', createDronesRouter(io));
-
-
-const missionsRouter = require('./routes/missions');
-
-
-app.use('/missions', missionsRouter);
-app.use('/drones', createDronesRouter(io));
+app.use('/reports', reportsRouter);
 
 
 
