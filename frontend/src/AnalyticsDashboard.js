@@ -27,7 +27,17 @@ function AnalyticsDashboard() {
     if (!window.Chart) {
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-      script.onload = () => drawChart(orgStats);
+      script.crossOrigin = 'anonymous';
+      script.onload = () => {
+        try {
+          drawChart(orgStats);
+        } catch (err) {
+          console.error('Error rendering chart', err);
+        }
+      };
+      script.onerror = (err) => {
+        console.error('Failed to load Chart.js', err);
+      };
       document.body.appendChild(script);
     } else {
       drawChart(orgStats);
