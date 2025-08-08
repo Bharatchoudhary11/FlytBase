@@ -15,11 +15,22 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+
 const createMissionsRouter = require('./routes/missions');
 const createDronesRouter = require('./routes/drones');
 
 app.use('/missions', createMissionsRouter(io));
 app.use('/drones', createDronesRouter(io));
+
+
+const missionsRouter = require('./routes/missions');
+
+const createDronesRouter = require('./routes/drones');
+
+app.use('/missions', missionsRouter);
+app.use('/drones', createDronesRouter(io));
+
+
 
 // Basic route to check server
 app.get("/", (req, res) => {
@@ -37,7 +48,7 @@ io.on("connection", (socket) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

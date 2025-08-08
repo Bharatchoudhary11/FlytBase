@@ -1,6 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 
+
 // Create a router factory so we can emit WebSocket events
 function createMissionsRouter(io) {
   const router = express.Router();
@@ -145,19 +146,68 @@ function createMissionsRouter(io) {
   return router;
 }
 
+const router = express.Router();
+
+// In-memory stores for missions
+const missions = new Map();
+
+// Create a new mission
+router.post('/', (req, res) => {
+  const { orgId, name, area, altitude, pattern, overlap } = req.body;
+  if (!orgId || !name || !area || !altitude || !pattern) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  if (area.type !== 'Polygon' || !Array.isArray(area.coordinates)) {
+    return res.status(400).json({ error: 'Area must be a GeoJSON Polygon' });
+  }
+
+  const id = uuidv4();
+  const polygon = area.coordinates[0];
+  const mission = {
+    id,
+    orgId,
+    name,
+    area,
+    altitude,
+    pattern,
+    overlap,
+    status: 'planned'
+  };
+
+  mission.waypoints = generateWaypoints(polygon, altitude, pattern, overlap);
+  missions.set(id, mission);
+  res.status(201).json(mission);
+});
+
+// Retrieve mission details
+router.get('/:id', (req, res) => {
+  const mission = missions.get(req.params.id);
+  if (!mission) return res.status(404).json({ error: 'Mission not found' });
+  res.json(mission);
+});
+
+
 // Generate waypoints based on pattern
 function generateWaypoints(coords, altitude, pattern, overlap) {
   const spacing = overlap || 0.001; // degree spacing for demo
   const polygon = coords.map(([lng, lat]) => ({ lng, lat }));
+
   if (
     polygon[0].lng !== polygon[polygon.length - 1].lng ||
     polygon[0].lat !== polygon[polygon.length - 1].lat
   ) {
+
+  if (polygon[0].lng !== polygon[polygon.length - 1].lng || polygon[0].lat !== polygon[polygon.length - 1].lat) {
+
     polygon.push({ ...polygon[0] });
   }
 
   if (pattern === 'perimeter') {
+
     return polygon.map((p) => ({ lat: p.lat, lng: p.lng, altitude }));
+
+    return polygon.map(p => ({ lat: p.lat, lng: p.lng, altitude }));
+
   }
 
   const [minLng, minLat, maxLng, maxLat] = getBoundingBox(polygon);
@@ -194,11 +244,16 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
 }
 
 function getBoundingBox(poly) {
+
   let minLat = Infinity,
     minLng = Infinity,
     maxLat = -Infinity,
     maxLng = -Infinity;
   poly.forEach((p) => {
+
+  let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+  poly.forEach(p => {
+
     if (p.lat < minLat) minLat = p.lat;
     if (p.lat > maxLat) maxLat = p.lat;
     if (p.lng < minLng) minLng = p.lng;
@@ -214,7 +269,11 @@ function horizontalIntersections(polygon, y) {
     const b = polygon[(i + 1) % polygon.length];
     if ((a.lat <= y && b.lat > y) || (b.lat <= y && a.lat > y)) {
       if (a.lat !== b.lat) {
+
         const lng = a.lng + ((y - a.lat) * (b.lng - a.lng)) / (b.lat - a.lat);
+
+        const lng = a.lng + (y - a.lat) * (b.lng - a.lng) / (b.lat - a.lat);
+
         lngs.push(lng);
       }
     }
@@ -236,7 +295,11 @@ function verticalIntersections(polygon, x) {
     const b = polygon[(i + 1) % polygon.length];
     if ((a.lng <= x && b.lng > x) || (b.lng <= x && a.lng > x)) {
       if (a.lng !== b.lng) {
+
         const lat = a.lat + ((x - a.lng) * (b.lat - a.lat)) / (b.lng - a.lng);
+
+        const lat = a.lat + (x - a.lng) * (b.lat - a.lat) / (b.lng - a.lng);
+
         lats.push(lat);
       }
     }
@@ -250,6 +313,7 @@ function verticalIntersections(polygon, x) {
   }
   return segments;
 }
+
 
 // Distance between two lat/lng points in meters
 function haversine(a, b) {
@@ -275,4 +339,7 @@ function pathLength(points) {
 }
 
 module.exports = createMissionsRouter;
+
+
+module.exports = router;
 
