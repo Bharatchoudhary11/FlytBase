@@ -7,7 +7,7 @@ function AnalyticsDashboard() {
   const [missionSummary, setMissionSummary] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:5001/reports/org')
+    fetch('/reports/org')
       .then((res) => res.json())
       .then(setOrgStats)
       .catch(console.error);
@@ -61,7 +61,7 @@ function AnalyticsDashboard() {
         />
         <button
           onClick={() => {
-            fetch(`http://localhost:5001/reports/missions/${missionId}`)
+            fetch(`/reports/missions/${missionId}`)
               .then((res) => res.json())
               .then(setMissionSummary)
               .catch(() => setMissionSummary(null));
