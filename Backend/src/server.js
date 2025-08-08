@@ -14,6 +14,13 @@ const io = socketIo(server);
 app.use(cors());
 app.use(express.json());
 
+// Routes
+const createMissionsRouter = require('./routes/missions');
+const createDronesRouter = require('./routes/drones');
+
+app.use('/missions', createMissionsRouter(io));
+app.use('/drones', createDronesRouter(io));
+
 // Basic route to check server
 app.get("/", (req, res) => {
   res.send("Drone Survey Management System Backend");
