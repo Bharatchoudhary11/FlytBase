@@ -1,9 +1,9 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
+const { drones } = require('../dataStore');
 
 function createDronesRouter(io) {
   const router = express.Router();
-  const drones = new Map();
   const validStatuses = ['available', 'charging', 'in_mission', 'maintenance'];
 
   // Register a new drone

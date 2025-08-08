@@ -1,10 +1,10 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
+const { missions, reports } = require('../dataStore');
 
 // Create a router factory so we can emit WebSocket events
 function createMissionsRouter(io) {
   const router = express.Router();
-  const missions = new Map();
 
   // Create a new mission
   router.post('/', (req, res) => {
@@ -104,6 +104,16 @@ function createMissionsRouter(io) {
     if (mission.completedWaypoints >= mission.waypoints.length) {
       mission.status = 'completed';
       mission.eta = 0;
+      const report = {
+        mission_id: mission.id,
+        duration: mission.startTime
+          ? (Date.now() - mission.startTime) / 1000
+          : 0,
+        distance: mission.distanceTraveled,
+        coverage: mission.waypoints.length,
+        created_at: new Date().toISOString()
+      };
+      reports.set(mission.id, report);
       io.emit(`mission/${mission.id}/events`, {
         status: mission.status,
         progress: 1,
