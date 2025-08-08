@@ -6,9 +6,18 @@ function AnalyticsDashboard() {
   const [missionId, setMissionId] = useState('');
   const [missionSummary, setMissionSummary] = useState(null);
 
+  const fetchJson = (url) =>
+    fetch(url).then(async (res) => {
+      if (!res.ok) throw new Error(`Request failed with ${res.status}`);
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Expected JSON but received ${contentType}`);
+      }
+      return res.json();
+    });
+
   useEffect(() => {
-    fetch('/reports/org')
-      .then((res) => res.json())
+    fetchJson('/reports/org')
       .then(setOrgStats)
       .catch(console.error);
   }, []);
@@ -61,8 +70,7 @@ function AnalyticsDashboard() {
         />
         <button
           onClick={() => {
-            fetch(`/reports/missions/${missionId}`)
-              .then((res) => res.json())
+            fetchJson(`/reports/missions/${missionId}`)
               .then(setMissionSummary)
               .catch(() => setMissionSummary(null));
           }}
