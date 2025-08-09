@@ -206,27 +206,16 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
 
       const segArray = Array.isArray(segments) ? segments : [];
       for (const seg of segArray) {
-        const startLng = Number(
-          Array.isArray(seg) ? seg[0] : seg?.startLng ?? seg?.[0]
-        );
-        const endLng = Number(
-          Array.isArray(seg) ? seg[1] : seg?.endLng ?? seg?.[1]
-        );
-        if (isNaN(startLng) || isNaN(endLng)) continue;
-
-      segments.forEach((seg) => {
-        // Each segment is expected to be an iterable pair [startLng, endLng].
-        // In case an object or invalid value sneaks in, coerce it into a
-        // two-number array and skip anything we can't interpret. This avoids
-        // "object is not iterable" errors when destructuring.
+        // Each segment should represent a pair of longitude values.  Accept
+        // either an array `[startLng, endLng]` or an object with numeric
+        // `startLng/endLng` properties and skip anything we can't interpret.
         const pair = Array.isArray(seg)
           ? seg
           : seg && typeof seg === 'object'
           ? [seg[0] ?? seg.startLng, seg[1] ?? seg.endLng]
           : [];
         const [startLng, endLng] = pair;
-        if (typeof startLng !== 'number' || typeof endLng !== 'number') return;
-
+        if (typeof startLng !== 'number' || typeof endLng !== 'number') continue;
 
         if (lineCount % 2 === 0) {
           points.push({ lat: y, lng: startLng, altitude });
@@ -246,22 +235,15 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
 
       const segArray = Array.isArray(segments) ? segments : [];
       for (const seg of segArray) {
-        const startLat = Number(
-          Array.isArray(seg) ? seg[0] : seg?.startLat ?? seg?.[0]
-        );
-        const endLat = Number(
-          Array.isArray(seg) ? seg[1] : seg?.endLat ?? seg?.[1]
-        );
-        if (isNaN(startLat) || isNaN(endLat)) continue;
-
-      segments.forEach((seg) => {
+        // Each segment is a pair of latitude values.  Accept either
+        // `[startLat, endLat]` or an object with `startLat/endLat` fields.
         const pair = Array.isArray(seg)
           ? seg
           : seg && typeof seg === 'object'
           ? [seg[0] ?? seg.startLat, seg[1] ?? seg.endLat]
           : [];
         const [startLat, endLat] = pair;
-        if (typeof startLat !== 'number' || typeof endLat !== 'number') return;
+        if (typeof startLat !== 'number' || typeof endLat !== 'number') continue;
 
         points.push({ lat: startLat, lng: x, altitude });
         points.push({ lat: endLat, lng: x, altitude });
