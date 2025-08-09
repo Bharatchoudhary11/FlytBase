@@ -2,6 +2,9 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { missions, reports } = require('../dataStore');
 
+// Assumed constant drone speed (meters per second) used for time estimates
+const DEFAULT_SPEED_MPS = 10;
+
 // Create a router factory so we can emit WebSocket events
 function createMissionsRouter(io) {
   const router = express.Router();
@@ -47,6 +50,10 @@ function createMissionsRouter(io) {
         .json({ error: 'Unable to generate waypoints from provided area' });
     }
 
+    const totalDistance = pathLength(waypoints);
+    const start = Date.now();
+    const duration = totalDistance / DEFAULT_SPEED_MPS; // seconds
+
     const mission = {
       id,
       orgId,
@@ -60,11 +67,11 @@ function createMissionsRouter(io) {
       trajectory: [],
       completedWaypoints: 0,
       distanceTraveled: 0,
-      totalDistance: pathLength(waypoints),
-      startTime: null,
-      endTime: null,
+      totalDistance,
+      startTime: start,
+      endTime: start + duration * 1000,
       progress: 0,
-      eta: null
+      eta: duration
     };
 
     missions.set(id, mission);
@@ -101,7 +108,9 @@ function createMissionsRouter(io) {
 
     if (mission.status === 'completed') {
       const end = mission.endTime ? new Date(mission.endTime).getTime() : Date.now();
-      const start = mission.startTime ? new Date(mission.startTime).getTime() : end;
+      const start = mission.startTime
+        ? new Date(mission.startTime).getTime()
+        : end - (mission.totalDistance / DEFAULT_SPEED_MPS) * 1000;
       mission.startTime = start;
       mission.endTime = end;
 
@@ -152,7 +161,7 @@ function createMissionsRouter(io) {
       mission.completedWaypoints++;
     }
 
-    if (!mission.startTime) {
+    if (mission.status === 'planned') {
       mission.startTime = Date.now();
       mission.status = 'in_progress';
       io.emit(`mission/${mission.id}/events`, {
@@ -183,7 +192,6 @@ function createMissionsRouter(io) {
       mission.status = 'completed';
       mission.eta = 0;
       mission.endTime = Date.now();
-      if (!mission.startTime) mission.startTime = mission.endTime;
       const report = {
         mission_id: mission.id,
         duration: (mission.endTime - mission.startTime) / 1000,
