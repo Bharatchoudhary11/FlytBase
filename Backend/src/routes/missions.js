@@ -84,6 +84,42 @@ function createMissionsRouter(io) {
     res.json(mission);
   });
 
+  // Update an existing mission. This is a lightweight PATCH handler mainly
+  // used by tests or development tools to fast‑forward a mission to a final
+  // state without streaming telemetry. Any fields provided in the request body
+  // replace the corresponding mission properties. If the mission is marked as
+  // completed and no report exists yet, a summary report is generated so that
+  // the `/reports/missions/:id` endpoint will succeed.
+  router.patch('/:id', (req, res) => {
+    const mission = missions.get(req.params.id);
+    if (!mission) {
+      return res.status(404).json({ error: 'Mission not found' });
+    }
+
+    Object.assign(mission, req.body);
+
+    if (mission.status === 'completed' && !reports.has(mission.id)) {
+      const report = {
+        mission_id: mission.id,
+        duration: mission.startTime
+          ? (Date.now() - new Date(mission.startTime).getTime()) / 1000
+          : 0,
+        distance: mission.distanceTraveled || 0,
+        coverage: mission.waypoints ? mission.waypoints.length : 0,
+        created_at: new Date().toISOString()
+      };
+      reports.set(mission.id, report);
+    }
+
+    io.emit(`mission/${mission.id}/events`, {
+      status: mission.status,
+      progress: mission.progress,
+      eta: mission.eta
+    });
+
+    res.json(mission);
+  });
+
   // Accept telemetry updates and broadcast over WebSocket
   router.post('/:id/telemetry', (req, res) => {
     const mission = missions.get(req.params.id);
