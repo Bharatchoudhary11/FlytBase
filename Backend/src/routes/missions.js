@@ -67,7 +67,14 @@ function createMissionsRouter(io) {
     };
 
     missions.set(id, mission);
+    io.emit('mission-created', mission);
+    console.log('Mission created', id);
     res.status(201).json(mission);
+  });
+
+  // List all missions
+  router.get('/', (_req, res) => {
+    res.json(Array.from(missions.values()));
   });
 
   // Retrieve mission details
