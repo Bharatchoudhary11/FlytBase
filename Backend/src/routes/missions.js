@@ -203,6 +203,7 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
   if (pattern === 'grid' || pattern === 'crosshatch') {
     for (let y = minLat; y <= maxLat; y += spacing) {
       const segments = horizontalIntersections(polygon, y);
+
       const segArray = Array.isArray(segments) ? segments : [];
       for (const seg of segArray) {
         const startLng = Number(
@@ -212,6 +213,20 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
           Array.isArray(seg) ? seg[1] : seg?.endLng ?? seg?.[1]
         );
         if (isNaN(startLng) || isNaN(endLng)) continue;
+
+      segments.forEach((seg) => {
+        // Each segment is expected to be an iterable pair [startLng, endLng].
+        // In case an object or invalid value sneaks in, coerce it into a
+        // two-number array and skip anything we can't interpret. This avoids
+        // "object is not iterable" errors when destructuring.
+        const pair = Array.isArray(seg)
+          ? seg
+          : seg && typeof seg === 'object'
+          ? [seg[0] ?? seg.startLng, seg[1] ?? seg.endLng]
+          : [];
+        const [startLng, endLng] = pair;
+        if (typeof startLng !== 'number' || typeof endLng !== 'number') return;
+
 
         if (lineCount % 2 === 0) {
           points.push({ lat: y, lng: startLng, altitude });
@@ -228,6 +243,7 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
   if (pattern === 'crosshatch') {
     for (let x = minLng; x <= maxLng; x += spacing) {
       const segments = verticalIntersections(polygon, x);
+
       const segArray = Array.isArray(segments) ? segments : [];
       for (const seg of segArray) {
         const startLat = Number(
@@ -237,6 +253,16 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
           Array.isArray(seg) ? seg[1] : seg?.endLat ?? seg?.[1]
         );
         if (isNaN(startLat) || isNaN(endLat)) continue;
+
+      segments.forEach((seg) => {
+        const pair = Array.isArray(seg)
+          ? seg
+          : seg && typeof seg === 'object'
+          ? [seg[0] ?? seg.startLat, seg[1] ?? seg.endLat]
+          : [];
+        const [startLat, endLat] = pair;
+        if (typeof startLat !== 'number' || typeof endLat !== 'number') return;
+
         points.push({ lat: startLat, lng: x, altitude });
         points.push({ lat: endLat, lng: x, altitude });
       }
