@@ -100,26 +100,23 @@ function createMissionsRouter(io) {
     Object.assign(mission, req.body);
 
     if (mission.status === 'completed') {
-      mission.endTime = mission.endTime || Date.now();
-    }
+      const end = mission.endTime ? new Date(mission.endTime).getTime() : Date.now();
+      const start = mission.startTime ? new Date(mission.startTime).getTime() : end;
+      mission.startTime = start;
+      mission.endTime = end;
 
-    if (mission.status === 'completed' && !reports.has(mission.id)) {
-      const start = mission.startTime
-        ? new Date(mission.startTime).getTime()
-        : Date.now();
-      const end = mission.endTime
-        ? new Date(mission.endTime).getTime()
-        : Date.now();
-      const report = {
-        mission_id: mission.id,
-        duration: (end - start) / 1000,
-        distance: mission.distanceTraveled || 0,
-        coverage: mission.waypoints ? mission.waypoints.length : 0,
-        created_at: new Date().toISOString(),
-        start_time: new Date(start).toISOString(),
-        end_time: new Date(end).toISOString()
-      };
-      reports.set(mission.id, report);
+      if (!reports.has(mission.id)) {
+        const report = {
+          mission_id: mission.id,
+          duration: (mission.endTime - mission.startTime) / 1000,
+          distance: mission.distanceTraveled || 0,
+          coverage: mission.waypoints ? mission.waypoints.length : 0,
+          created_at: new Date().toISOString(),
+          start_time: new Date(mission.startTime).toISOString(),
+          end_time: new Date(mission.endTime).toISOString()
+        };
+        reports.set(mission.id, report);
+      }
     }
 
     io.emit(`mission/${mission.id}/events`, {
@@ -186,17 +183,14 @@ function createMissionsRouter(io) {
       mission.status = 'completed';
       mission.eta = 0;
       mission.endTime = Date.now();
+      if (!mission.startTime) mission.startTime = mission.endTime;
       const report = {
         mission_id: mission.id,
-        duration: mission.startTime
-          ? (mission.endTime - mission.startTime) / 1000
-          : 0,
+        duration: (mission.endTime - mission.startTime) / 1000,
         distance: mission.distanceTraveled,
         coverage: mission.waypoints.length,
         created_at: new Date().toISOString(),
-        start_time: mission.startTime
-          ? new Date(mission.startTime).toISOString()
-          : null,
+        start_time: new Date(mission.startTime).toISOString(),
         end_time: new Date(mission.endTime).toISOString()
       };
       reports.set(mission.id, report);
