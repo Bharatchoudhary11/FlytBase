@@ -3,6 +3,10 @@ import React, { useEffect, useRef, useState } from 'react';
 function AnalyticsDashboard() {
   const [orgStats, setOrgStats] = useState(null);
   const chartRef = useRef(null);
+  // Keep a reference to the current Chart.js instance so we can
+  // destroy it before creating a new one. This avoids the
+  // "Canvas is already in use" error when the component rerenders.
+  const chartInstanceRef = useRef(null);
   const [missionId, setMissionId] = useState('');
   const [missionSummary, setMissionSummary] = useState(null);
 
@@ -42,11 +46,20 @@ function AnalyticsDashboard() {
     } else {
       drawChart(orgStats);
     }
+    return () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+        chartInstanceRef.current = null;
+      }
+    };
   }, [orgStats]);
 
   function drawChart(stats) {
     const ctx = chartRef.current.getContext('2d');
-    new window.Chart(ctx, {
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
+    }
+    chartInstanceRef.current = new window.Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: ['Success', 'Failure'],

@@ -17,8 +17,18 @@ function createMissionsRouter(io) {
     }
 
     const id = uuidv4();
-    const polygon = area.coordinates[0];
-    const waypoints = generateWaypoints(polygon, altitude, pattern, overlap);
+    // Support GeoJSON-style coordinate arrays as well as simple arrays of
+    // {lat,lng} points that may come from the frontend. The coordinates field
+    // can therefore be one of the following shapes:
+    //   [[{lat,lng}, ...]]  -> GeoJSON polygon with a single ring
+    //   [{lat,lng}, ...]    -> plain array of points
+    //   {0:{lat,lng},...}   -> object keyed by index
+    const rawCoords = Array.isArray(area.coordinates)
+      ? Array.isArray(area.coordinates[0])
+        ? area.coordinates[0]
+        : area.coordinates
+      : Object.values(area.coordinates || {});
+    const waypoints = generateWaypoints(rawCoords, altitude, pattern, overlap);
 
     const mission = {
       id,
@@ -164,11 +174,16 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
     : coords && typeof coords === 'object'
     ? Object.values(coords)
     : [];
-  // Allow coordinates to be provided either as [lng, lat] arrays
-  // or as objects of the form { lat, lng }
-  const polygon = coordArray.map((pt) =>
-    Array.isArray(pt) ? { lng: pt[0], lat: pt[1] } : { lng: pt.lng, lat: pt.lat }
-  );
+  // Normalize coordinates and drop anything we can't interpret
+  const polygon = coordArray
+    .map((pt) =>
+      Array.isArray(pt)
+        ? { lng: pt[0], lat: pt[1] }
+        : pt && typeof pt === 'object'
+        ? { lng: Number(pt.lng), lat: Number(pt.lat) }
+        : null
+    )
+    .filter((p) => p && !isNaN(p.lat) && !isNaN(p.lng));
   if (polygon.length === 0) return [];
   if (
     polygon[0].lng !== polygon[polygon.length - 1].lng ||
