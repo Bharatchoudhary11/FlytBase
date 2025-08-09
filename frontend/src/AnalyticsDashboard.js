@@ -13,12 +13,17 @@ function AnalyticsDashboard() {
 
   const fetchJson = (url) =>
     fetch(url).then(async (res) => {
-      if (!res.ok) throw new Error(`Request failed with ${res.status}`);
       const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
+      const isJson = contentType.includes('application/json');
+      const data = isJson ? await res.json() : null;
+      if (!res.ok) {
+        const message = data && data.error ? data.error : `Request failed with ${res.status}`;
+        throw new Error(message);
+      }
+      if (!isJson) {
         throw new Error(`Expected JSON but received ${contentType}`);
       }
-      return res.json();
+      return data;
     });
 
   useEffect(() => {
@@ -99,14 +104,14 @@ function AnalyticsDashboard() {
               setMissionSummary(null);
               return;
             }
-            fetchJson(`/reports/missions/${missionId.trim()}`)
+            fetchJson(`/reports/missions/${encodeURIComponent(missionId.trim())}`)
               .then((summary) => {
                 setMissionSummary(summary);
                 setMissionError(null);
               })
-              .catch(() => {
+              .catch((err) => {
                 setMissionSummary(null);
-                setMissionError('Mission report not found');
+                setMissionError(err.message || 'Mission report not found');
               });
           }}
         >

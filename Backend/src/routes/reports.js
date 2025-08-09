@@ -4,16 +4,26 @@ const { missions, drones, reports } = require('../dataStore');
 const router = express.Router();
 
 // Per-mission summary
+//
+// Originally this endpoint required the mission to still exist in the in-memory
+// `missions` store. In practice reports might outlive their missions (e.g.
+// after a server restart) which caused the API to respond with "Mission not
+// found" even though a report was available.  This meant the frontend could
+// never load a completed mission by id.  We now look up the report first and
+// only fall back to mission data if it is present.  If the mission is missing we
+// still return the report using its stored coverage information.
 router.get('/missions/:id', (req, res) => {
-  const mission = missions.get(req.params.id);
-  if (!mission) return res.status(404).json({ error: 'Mission not found' });
   const report = reports.get(req.params.id);
-  if (!report) return res.status(404).json({ error: 'Report not available' });
+  if (!report) return res.status(404).json({ error: 'Report not found' });
+
+  const mission = missions.get(req.params.id);
   const summary = {
     mission_id: report.mission_id,
     duration: report.duration,
     distance: report.distance,
-    waypoints: mission.waypoints.length,
+    // If the mission has been purged fall back to the coverage value stored in
+    // the report itself.
+    waypoints: mission ? mission.waypoints.length : report.coverage,
     created_at: report.created_at
   };
   res.json(summary);
