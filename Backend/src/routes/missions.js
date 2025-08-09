@@ -6,6 +6,22 @@ const { missions, reports } = require('../dataStore');
 function createMissionsRouter(io) {
   const router = express.Router();
 
+  // Normalize the various coordinate formats the client may send.
+  // Supports arrays, objects keyed by index, and even objects whose values
+  // are themselves arrays of points. The result is always a flat array of
+  // coordinate points.
+  function normalizeCoords(input) {
+    if (!input) return [];
+    if (Array.isArray(input)) {
+      return Array.isArray(input[0]) ? input[0] : input;
+    }
+    if (typeof input === 'object') {
+      const values = Object.values(input);
+      return Array.isArray(values[0]) ? values[0] : values;
+    }
+    return [];
+  }
+
   // Create a new mission
   router.post('/', (req, res) => {
     const { orgId, name, area, altitude, pattern, overlap } = req.body;
@@ -20,18 +36,16 @@ function createMissionsRouter(io) {
     }
 
     const id = uuidv4();
-    // Support GeoJSON-style coordinate arrays as well as simple arrays of
-    // {lat,lng} points that may come from the frontend. The coordinates field
-    // can therefore be one of the following shapes:
-    //   [[{lat,lng}, ...]]  -> GeoJSON polygon with a single ring
-    //   [{lat,lng}, ...]    -> plain array of points
-    //   {0:{lat,lng},...}   -> object keyed by index
-    const rawCoords = Array.isArray(area.coordinates)
-      ? Array.isArray(area.coordinates[0])
-        ? area.coordinates[0]
-        : area.coordinates
-      : Object.values(area.coordinates || {});
+    // Support GeoJSON-style coordinate arrays as well as simple arrays or
+    // objects of {lat,lng} points that may come from the frontend. Any shape
+    // we cannot interpret is treated as an error instead of crashing.
+    const rawCoords = normalizeCoords(area.coordinates);
     const waypoints = generateWaypoints(rawCoords, altitude, pattern, overlap);
+    if (!waypoints.length) {
+      return res
+        .status(400)
+        .json({ error: 'Unable to generate waypoints from provided area' });
+    }
 
     const mission = {
       id,
