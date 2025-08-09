@@ -12,7 +12,10 @@ function createMissionsRouter(io) {
     if (!orgId || !name || !area || !altitude || !pattern) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    if (area.type !== 'Polygon' || !Array.isArray(area.coordinates)) {
+    if (
+      area.type !== 'Polygon' ||
+      (!Array.isArray(area.coordinates) && typeof area.coordinates !== 'object')
+    ) {
       return res.status(400).json({ error: 'Area must be a GeoJSON Polygon' });
     }
 
