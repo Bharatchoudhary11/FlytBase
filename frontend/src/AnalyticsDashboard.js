@@ -69,17 +69,21 @@ function AnalyticsDashboard() {
   }, [orgStats]);
 
   function drawChart(stats) {
-    const ctx = chartRef.current.getContext('2d');
+    const data = [stats.missionSuccessRate * 100, 100 - stats.missionSuccessRate * 100];
     if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
+      chartInstanceRef.current.data.datasets[0].data = data;
+      chartInstanceRef.current.update();
+      return;
     }
+
+    const ctx = chartRef.current.getContext('2d');
     chartInstanceRef.current = new window.Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: ['Success', 'Failure'],
         datasets: [
           {
-            data: [stats.missionSuccessRate * 100, 100 - stats.missionSuccessRate * 100],
+            data,
             backgroundColor: ['#36A2EB', '#FF6384'],
           },
         ],
