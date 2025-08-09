@@ -71,7 +71,8 @@ function createMissionsRouter(io) {
       startTime: start,
       endTime: start + duration * 1000,
       progress: 0,
-      eta: duration
+      eta: duration,
+      failureReason: null
     };
 
     missions.set(id, mission);
@@ -126,6 +127,9 @@ function createMissionsRouter(io) {
         };
         reports.set(mission.id, report);
       }
+    } else if (mission.status === 'failed') {
+      mission.endTime = mission.endTime || Date.now();
+      mission.eta = null;
     }
 
     io.emit(`mission/${mission.id}/events`, {

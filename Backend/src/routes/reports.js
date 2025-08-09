@@ -55,14 +55,30 @@ router.get('/missions/:id', (req, res) => {
 
 // Org-wide analytics
 router.get('/org', (_req, res) => {
-  const totalMissions = missions.size;
-  const completed = Array.from(missions.values()).filter(m => m.status === 'completed').length;
+  const allMissions = Array.from(missions.values());
+  const totalMissions = allMissions.length;
+  const successes = allMissions.filter(m => m.status === 'completed').length;
+  const batteryFailures = allMissions.filter(
+    m => m.status === 'failed' && m.failureReason === 'battery'
+  ).length;
+  const damageFailures = allMissions.filter(
+    m => m.status === 'failed' && m.failureReason === 'damage'
+  ).length;
   const dronesArr = Array.from(drones.values());
   const averageBattery = dronesArr.length
     ? dronesArr.reduce((sum, d) => sum + d.battery, 0) / dronesArr.length
     : 0;
-  const missionSuccessRate = totalMissions ? completed / totalMissions : 0;
-  res.json({ totalMissions, averageBattery, missionSuccessRate });
+  const missionSuccessRate = totalMissions ? successes / totalMissions : 0;
+  res.json({
+    totalMissions,
+    averageBattery,
+    missionSuccessRate,
+    missionOutcomes: {
+      success: successes,
+      batteryFailure: batteryFailures,
+      damageFailure: damageFailures
+    }
+  });
 });
 
 module.exports = router;
