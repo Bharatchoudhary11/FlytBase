@@ -28,7 +28,9 @@ function createDronesRouter(io) {
 
   // List all drones
   router.get('/', (_req, res) => {
-    res.json(Array.from(drones.values()));
+    const allDrones = Array.from(drones.values());
+    console.log('Listing drones:', allDrones);
+    res.json(allDrones);
   });
 
   // Update drone status or battery
