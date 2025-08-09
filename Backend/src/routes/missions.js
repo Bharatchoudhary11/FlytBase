@@ -158,11 +158,18 @@ function createMissionsRouter(io) {
 // Generate waypoints based on pattern
 function generateWaypoints(coords, altitude, pattern, overlap) {
   const spacing = overlap || 0.001; // degree spacing for demo
+  // Accept coordinates passed either as an array or an object with numeric keys
+  const coordArray = Array.isArray(coords)
+    ? coords
+    : coords && typeof coords === 'object'
+    ? Object.values(coords)
+    : [];
   // Allow coordinates to be provided either as [lng, lat] arrays
   // or as objects of the form { lat, lng }
-  const polygon = coords.map((pt) =>
+  const polygon = coordArray.map((pt) =>
     Array.isArray(pt) ? { lng: pt[0], lat: pt[1] } : { lng: pt.lng, lat: pt.lat }
   );
+  if (polygon.length === 0) return [];
   if (
     polygon[0].lng !== polygon[polygon.length - 1].lng ||
     polygon[0].lat !== polygon[polygon.length - 1].lat
