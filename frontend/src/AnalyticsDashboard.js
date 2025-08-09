@@ -9,6 +9,7 @@ function AnalyticsDashboard() {
   const chartInstanceRef = useRef(null);
   const [missionId, setMissionId] = useState('');
   const [missionSummary, setMissionSummary] = useState(null);
+  const [missionError, setMissionError] = useState(null);
 
   const fetchJson = (url) =>
     fetch(url).then(async (res) => {
@@ -93,13 +94,27 @@ function AnalyticsDashboard() {
         />
         <button
           onClick={() => {
-            fetchJson(`/reports/missions/${missionId}`)
-              .then(setMissionSummary)
-              .catch(() => setMissionSummary(null));
+            if (!missionId.trim()) {
+              setMissionError('Please enter a mission ID');
+              setMissionSummary(null);
+              return;
+            }
+            fetchJson(`/reports/missions/${missionId.trim()}`)
+              .then((summary) => {
+                setMissionSummary(summary);
+                setMissionError(null);
+              })
+              .catch(() => {
+                setMissionSummary(null);
+                setMissionError('Mission report not found');
+              });
           }}
         >
           Load
         </button>
+        {missionError && (
+          <p style={{ color: 'red' }}>{missionError}</p>
+        )}
         {missionSummary && (
           <ul>
             <li>Duration: {missionSummary.duration}s</li>
