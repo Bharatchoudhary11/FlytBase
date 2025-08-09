@@ -5,6 +5,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 require("dotenv").config();
+const { missions } = require("./dataStore");
 
 const app = express();
 const server = http.createServer(app);
@@ -26,9 +27,12 @@ app.use('/reports', reportsRouter);
 
 
 
-// Basic route to check server
+// Basic route to check server and list missions
 app.get("/", (req, res) => {
-  res.send("Drone Survey Management System Backend");
+  res.json({
+    message: "Drone Survey Management System Backend",
+    missions: Array.from(missions.values())
+  });
 });
 
 // WebSocket setup (real-time updates for drone status)
