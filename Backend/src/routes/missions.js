@@ -62,6 +62,7 @@ function createMissionsRouter(io) {
       distanceTraveled: 0,
       totalDistance: pathLength(waypoints),
       startTime: null,
+      endTime: null,
       progress: 0,
       eta: null
     };
@@ -98,15 +99,25 @@ function createMissionsRouter(io) {
 
     Object.assign(mission, req.body);
 
+    if (mission.status === 'completed') {
+      mission.endTime = mission.endTime || Date.now();
+    }
+
     if (mission.status === 'completed' && !reports.has(mission.id)) {
+      const start = mission.startTime
+        ? new Date(mission.startTime).getTime()
+        : Date.now();
+      const end = mission.endTime
+        ? new Date(mission.endTime).getTime()
+        : Date.now();
       const report = {
         mission_id: mission.id,
-        duration: mission.startTime
-          ? (Date.now() - new Date(mission.startTime).getTime()) / 1000
-          : 0,
+        duration: (end - start) / 1000,
         distance: mission.distanceTraveled || 0,
         coverage: mission.waypoints ? mission.waypoints.length : 0,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        start_time: new Date(start).toISOString(),
+        end_time: new Date(end).toISOString()
       };
       reports.set(mission.id, report);
     }
@@ -174,14 +185,19 @@ function createMissionsRouter(io) {
     if (mission.completedWaypoints >= mission.waypoints.length) {
       mission.status = 'completed';
       mission.eta = 0;
+      mission.endTime = Date.now();
       const report = {
         mission_id: mission.id,
         duration: mission.startTime
-          ? (Date.now() - mission.startTime) / 1000
+          ? (mission.endTime - mission.startTime) / 1000
           : 0,
         distance: mission.distanceTraveled,
         coverage: mission.waypoints.length,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        start_time: mission.startTime
+          ? new Date(mission.startTime).toISOString()
+          : null,
+        end_time: new Date(mission.endTime).toISOString()
       };
       reports.set(mission.id, report);
       io.emit(`mission/${mission.id}/events`, {
@@ -209,6 +225,7 @@ function createMissionsRouter(io) {
       mission.status = 'in_progress';
     } else if (action === 'abort' && mission.status !== 'completed' && mission.status !== 'aborted') {
       mission.status = 'aborted';
+      mission.endTime = Date.now();
     } else {
       return res.status(400).json({ error: 'Action not allowed in current state' });
     }

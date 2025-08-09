@@ -24,7 +24,9 @@ router.get('/missions/:id', (req, res) => {
     // If the mission has been purged fall back to the coverage value stored in
     // the report itself.
     waypoints: mission ? mission.waypoints.length : report.coverage,
-    created_at: report.created_at
+    created_at: report.created_at,
+    start_time: report.start_time,
+    end_time: report.end_time
   };
   res.json(summary);
 });
