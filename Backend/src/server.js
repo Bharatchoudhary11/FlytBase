@@ -5,7 +5,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 require("dotenv").config();
-const { missions } = require("./dataStore");
+const { missions, drones } = require("./dataStore");
 
 const app = express();
 const server = http.createServer(app);
@@ -27,11 +27,12 @@ app.use('/reports', reportsRouter);
 
 
 
-// Basic route to check server and list missions
+// Basic route to check server and list missions and drones
 app.get("/", (req, res) => {
   res.json({
     message: "Drone Survey Management System Backend",
-    missions: Array.from(missions.values())
+    missions: Array.from(missions.values()),
+    drones: Array.from(drones.values())
   });
 });
 
