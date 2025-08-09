@@ -89,9 +89,21 @@ function AnalyticsDashboard() {
   }, [orgStats]);
 
   function drawChart(stats) {
-    const data = [stats.missionSuccessRate * 100, 100 - stats.missionSuccessRate * 100];
+    const outcomes = stats.missionOutcomes || {
+      success: 0,
+      batteryFailure: 0,
+      damageFailure: 0,
+    };
+    const data = [
+      outcomes.success,
+      outcomes.batteryFailure,
+      outcomes.damageFailure,
+    ];
+    const labels = ['Success', 'Battery Failure', 'Damage Failure'];
+
     if (chartInstanceRef.current) {
       chartInstanceRef.current.data.datasets[0].data = data;
+      chartInstanceRef.current.data.labels = labels;
       chartInstanceRef.current.update();
       return;
     }
@@ -100,11 +112,11 @@ function AnalyticsDashboard() {
     chartInstanceRef.current = new window.Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Success', 'Failure'],
+        labels,
         datasets: [
           {
             data,
-            backgroundColor: ['#36A2EB', '#FF6384'],
+            backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56'],
           },
         ],
       },
