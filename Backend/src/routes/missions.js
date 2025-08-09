@@ -203,7 +203,16 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
   if (pattern === 'grid' || pattern === 'crosshatch') {
     for (let y = minLat; y <= maxLat; y += spacing) {
       const segments = horizontalIntersections(polygon, y);
-      segments.forEach(([startLng, endLng]) => {
+      const segArray = Array.isArray(segments) ? segments : [];
+      for (const seg of segArray) {
+        const startLng = Number(
+          Array.isArray(seg) ? seg[0] : seg?.startLng ?? seg?.[0]
+        );
+        const endLng = Number(
+          Array.isArray(seg) ? seg[1] : seg?.endLng ?? seg?.[1]
+        );
+        if (isNaN(startLng) || isNaN(endLng)) continue;
+
         if (lineCount % 2 === 0) {
           points.push({ lat: y, lng: startLng, altitude });
           points.push({ lat: y, lng: endLng, altitude });
@@ -211,18 +220,26 @@ function generateWaypoints(coords, altitude, pattern, overlap) {
           points.push({ lat: y, lng: endLng, altitude });
           points.push({ lat: y, lng: startLng, altitude });
         }
-        lineCount++;
-      });
+      }
+      lineCount++;
     }
   }
 
   if (pattern === 'crosshatch') {
     for (let x = minLng; x <= maxLng; x += spacing) {
       const segments = verticalIntersections(polygon, x);
-      segments.forEach(([startLat, endLat]) => {
+      const segArray = Array.isArray(segments) ? segments : [];
+      for (const seg of segArray) {
+        const startLat = Number(
+          Array.isArray(seg) ? seg[0] : seg?.startLat ?? seg?.[0]
+        );
+        const endLat = Number(
+          Array.isArray(seg) ? seg[1] : seg?.endLat ?? seg?.[1]
+        );
+        if (isNaN(startLat) || isNaN(endLat)) continue;
         points.push({ lat: startLat, lng: x, altitude });
         points.push({ lat: endLat, lng: x, altitude });
-      });
+      }
     }
   }
 
