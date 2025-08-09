@@ -6,6 +6,29 @@ const { missions, reports } = require('../dataStore');
 function createMissionsRouter(io) {
   const router = express.Router();
 
+  // Normalize the various coordinate formats the client may send.  The
+  // input may be nested arrays (GeoJSON style) or objects keyed by index.
+  // We walk the structure recursively and collect any objects containing
+  // numeric `lat`/`lng` properties into a flat array.
+  function normalizeCoords(input) {
+    const points = [];
+    (function walk(node) {
+      if (!node) return;
+      if (Array.isArray(node)) {
+        node.forEach(walk);
+        return;
+      }
+      if (typeof node === 'object') {
+        if (typeof node.lat === 'number' && typeof node.lng === 'number') {
+          points.push({ lat: node.lat, lng: node.lng });
+        } else {
+          Object.values(node).forEach(walk);
+        }
+      }
+    })(input);
+    return points;
+  }
+
   // Create a new mission
   router.post('/', (req, res) => {
     const { orgId, name, area, altitude, pattern, overlap } = req.body;
@@ -20,18 +43,16 @@ function createMissionsRouter(io) {
     }
 
     const id = uuidv4();
-    // Support GeoJSON-style coordinate arrays as well as simple arrays of
-    // {lat,lng} points that may come from the frontend. The coordinates field
-    // can therefore be one of the following shapes:
-    //   [[{lat,lng}, ...]]  -> GeoJSON polygon with a single ring
-    //   [{lat,lng}, ...]    -> plain array of points
-    //   {0:{lat,lng},...}   -> object keyed by index
-    const rawCoords = Array.isArray(area.coordinates)
-      ? Array.isArray(area.coordinates[0])
-        ? area.coordinates[0]
-        : area.coordinates
-      : Object.values(area.coordinates || {});
+    // Support GeoJSON-style coordinate arrays as well as simple arrays or
+    // objects of {lat,lng} points that may come from the frontend. Any shape
+    // we cannot interpret is treated as an error instead of crashing.
+    const rawCoords = normalizeCoords(area.coordinates);
     const waypoints = generateWaypoints(rawCoords, altitude, pattern, overlap);
+    if (!waypoints.length) {
+      return res
+        .status(400)
+        .json({ error: 'Unable to generate waypoints from provided area' });
+    }
 
     const mission = {
       id,
@@ -171,22 +192,14 @@ function createMissionsRouter(io) {
 // Generate waypoints based on pattern
 function generateWaypoints(coords, altitude, pattern, overlap) {
   const spacing = overlap || 0.001; // degree spacing for demo
-  // Accept coordinates passed either as an array or an object with numeric keys
-  const coordArray = Array.isArray(coords)
-    ? coords
-    : coords && typeof coords === 'object'
-    ? Object.values(coords)
+  // Coordinates should already be normalized to an array of {lat,lng} objects.
+  const polygon = Array.isArray(coords)
+    ? coords.filter(
+        (p) =>
+          p && typeof p.lat === "number" && typeof p.lng === "number" &&
+          !isNaN(p.lat) && !isNaN(p.lng)
+      )
     : [];
-  // Normalize coordinates and drop anything we can't interpret
-  const polygon = coordArray
-    .map((pt) =>
-      Array.isArray(pt)
-        ? { lng: pt[0], lat: pt[1] }
-        : pt && typeof pt === 'object'
-        ? { lng: Number(pt.lng), lat: Number(pt.lat) }
-        : null
-    )
-    .filter((p) => p && !isNaN(p.lat) && !isNaN(p.lng));
   if (polygon.length === 0) return [];
   if (
     polygon[0].lng !== polygon[polygon.length - 1].lng ||
