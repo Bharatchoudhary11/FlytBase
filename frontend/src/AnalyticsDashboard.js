@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+// Allow the backend API base URL to be configured at build time.  When the
+// frontend is served from a different origin than the backend (e.g. the React
+// dev server on port 3000 proxying to an API on port 5001) we need to prefix
+// all requests with the backend host.  In production the variable can be left
+// unset so that relative URLs continue to work when both services share the
+// same origin.
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+
 function AnalyticsDashboard() {
   const [orgStats, setOrgStats] = useState(null);
   const chartRef = useRef(null);
@@ -12,7 +20,7 @@ function AnalyticsDashboard() {
   const [missionError, setMissionError] = useState(null);
 
   const fetchJson = (url) =>
-    fetch(url).then(async (res) => {
+    fetch(`${API_BASE_URL}${url}`).then(async (res) => {
       const contentType = res.headers.get('content-type') || '';
       const isJson = contentType.includes('application/json');
       const data = isJson ? await res.json() : null;
