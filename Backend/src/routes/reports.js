@@ -40,8 +40,11 @@ router.get('/missions/:id', (req, res) => {
   // especially useful for missions that are planned or in progress.
   const summary = {
     mission_id: mission.id,
-    duration: null,
-    distance: mission.distanceTraveled || 0,
+    duration:
+      mission.startTime && mission.endTime
+        ? (mission.endTime - mission.startTime) / 1000
+        : null,
+    distance: mission.totalDistance || mission.distanceTraveled || 0,
     waypoints: mission.waypoints ? mission.waypoints.length : 0,
     created_at: null,
     start_time: mission.startTime ? new Date(mission.startTime).toISOString() : null,
