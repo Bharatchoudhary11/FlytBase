@@ -35,9 +35,29 @@ function AnalyticsDashboard() {
     });
 
   useEffect(() => {
-    fetchJson('/reports/org')
-      .then(setOrgStats)
-      .catch(console.error);
+    let isCancelled = false;
+
+    const load = () => {
+      fetchJson('/reports/org')
+        .then((stats) => {
+          if (!isCancelled) {
+            setOrgStats(stats);
+          }
+        })
+        .catch((err) => {
+          if (!isCancelled) {
+            console.error(err);
+          }
+        });
+    };
+
+    load();
+    const intervalId = setInterval(load, 5000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
