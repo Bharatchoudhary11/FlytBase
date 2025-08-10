@@ -111,6 +111,15 @@ function AnalyticsDashboard() {
             <li>Duration: {missionSummary.duration}s</li>
             <li>Distance: {missionSummary.distance.toFixed(2)}m</li>
             <li>Waypoints: {missionSummary.waypoints}</li>
+            <li>
+              Data Frequency: {missionSummary.data_frequency}Hz
+            </li>
+            <li>
+              Sensors:{' '}
+              {Array.isArray(missionSummary.sensors)
+                ? missionSummary.sensors.join(', ')
+                : 'N/A'}
+            </li>
           </ul>
         )}
       </div>
