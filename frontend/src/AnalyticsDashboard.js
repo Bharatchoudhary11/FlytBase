@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 
-// Allow the backend API base URL to be configured at build time.  When the
+// Allow the backend API base URL to be configured at build time. When the
 // frontend is served from a different origin than the backend (e.g. the React
 // dev server on port 3000 proxying to an API on port 5001) we need to prefix
-// all requests with the backend host.  In production the variable can be left
+// all requests with the backend host. In production the variable can be left
 // unset so that relative URLs continue to work when both services share the
-// same origin.
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+// same origin. The value is read from the `REACT_APP_API_URL` environment
+// variable so platforms like Vercel or Netlify can expose the backend URL
+// without code changes.
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 function AnalyticsDashboard() {
   const [orgStats, setOrgStats] = useState(null);
