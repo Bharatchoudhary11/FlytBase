@@ -30,3 +30,32 @@ This project handles mission management and reporting aspects of drone operation
 - `sensors` &ndash; optional array of sensor identifiers to activate during the mission
 
 At FlytBase, we prioritize high-quality, reliable features over superficial coverage. Focus on thoughtful design and engineering to deliver well-crafted solutions.
+
+## Development Setup
+
+The project is split into a simple Node backend and a React frontend.
+
+### Backend
+
+```
+cd Backend
+npm install
+npm start        # starts the API on http://localhost:5001
+```
+
+### Frontend
+
+The React app expects the backend base URL in the `REACT_APP_API_URL` environment
+variable. Copy `.env.example` to `.env` and adjust if your backend runs on a
+different port or host.
+
+```
+cd frontend
+cp .env.example .env   # optional: edit to match your backend URL
+npm install
+npm start
+```
+
+When deploying to services like Netlify or Vercel, define the
+`REACT_APP_API_URL` environment variable in their dashboard so the built app can
+reach the backend.
