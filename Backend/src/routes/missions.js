@@ -27,8 +27,18 @@ function createMissionsRouter(io) {
 
   // Create a new mission
   router.post('/', (req, res) => {
-    const { orgId, name, area, altitude, pattern, overlap } = req.body;
-    if (!orgId || !name || !area || !altitude || !pattern) {
+    const {
+      orgId,
+      name,
+      area,
+      altitude,
+      pattern,
+      overlap,
+      dataFrequency,
+      sensors
+    } = req.body;
+
+    if (!orgId || !name || !area || !altitude || !pattern || !dataFrequency) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     if (
@@ -36,6 +46,14 @@ function createMissionsRouter(io) {
       (!Array.isArray(area.coordinates) && typeof area.coordinates !== 'object')
     ) {
       return res.status(400).json({ error: 'Area must be a GeoJSON Polygon' });
+    }
+    if (typeof dataFrequency !== 'number' || dataFrequency <= 0) {
+      return res
+        .status(400)
+        .json({ error: 'dataFrequency must be a positive number' });
+    }
+    if (sensors !== undefined && !Array.isArray(sensors)) {
+      return res.status(400).json({ error: 'sensors must be an array' });
     }
 
     const id = uuidv4();
@@ -62,6 +80,8 @@ function createMissionsRouter(io) {
       altitude,
       pattern,
       overlap,
+      dataFrequency,
+      sensors: sensors || [],
       status: 'planned',
       waypoints,
       trajectory: [],
@@ -123,7 +143,9 @@ function createMissionsRouter(io) {
           coverage: mission.waypoints ? mission.waypoints.length : 0,
           created_at: new Date().toISOString(),
           start_time: new Date(mission.startTime).toISOString(),
-          end_time: new Date(mission.endTime).toISOString()
+          end_time: new Date(mission.endTime).toISOString(),
+          data_frequency: mission.dataFrequency,
+          sensors: mission.sensors
         };
         reports.set(mission.id, report);
       }
@@ -203,7 +225,9 @@ function createMissionsRouter(io) {
         coverage: mission.waypoints.length,
         created_at: new Date().toISOString(),
         start_time: new Date(mission.startTime).toISOString(),
-        end_time: new Date(mission.endTime).toISOString()
+        end_time: new Date(mission.endTime).toISOString(),
+        data_frequency: mission.dataFrequency,
+        sensors: mission.sensors
       };
       reports.set(mission.id, report);
       io.emit(`mission/${mission.id}/events`, {

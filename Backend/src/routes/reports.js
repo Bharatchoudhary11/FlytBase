@@ -21,37 +21,41 @@ router.get('/missions/:id', (req, res) => {
     return res.status(404).json({ error: 'Report not found' });
   }
 
-  if (report) {
-    const summary = {
-      mission_id: report.mission_id,
-      duration: report.duration,
-      distance: report.distance,
-      // If the mission has been purged fall back to the coverage value stored in
-      // the report itself.
-      waypoints: mission ? mission.waypoints.length : report.coverage,
-      created_at: report.created_at,
-      start_time: report.start_time,
-      end_time: report.end_time
-    };
-    return res.json(summary);
-  }
+    if (report) {
+      const summary = {
+        mission_id: report.mission_id,
+        duration: report.duration,
+        distance: report.distance,
+        // If the mission has been purged fall back to the coverage value stored in
+        // the report itself.
+        waypoints: mission ? mission.waypoints.length : report.coverage,
+        created_at: report.created_at,
+        start_time: report.start_time,
+        end_time: report.end_time,
+        data_frequency: mission ? mission.dataFrequency : report.data_frequency,
+        sensors: mission ? mission.sensors : report.sensors || []
+      };
+      return res.json(summary);
+    }
 
   // If there's no report yet, expose whatever mission data we have. This is
   // especially useful for missions that are planned or in progress.
-  const summary = {
-    mission_id: mission.id,
-    duration:
-      mission.startTime && mission.endTime
-        ? (mission.endTime - mission.startTime) / 1000
-        : null,
-    distance: mission.totalDistance || mission.distanceTraveled || 0,
-    waypoints: mission.waypoints ? mission.waypoints.length : 0,
-    created_at: null,
-    start_time: mission.startTime ? new Date(mission.startTime).toISOString() : null,
-    end_time: mission.endTime ? new Date(mission.endTime).toISOString() : null
-  };
-  res.json(summary);
-});
+    const summary = {
+      mission_id: mission.id,
+      duration:
+        mission.startTime && mission.endTime
+          ? (mission.endTime - mission.startTime) / 1000
+          : null,
+      distance: mission.totalDistance || mission.distanceTraveled || 0,
+      waypoints: mission.waypoints ? mission.waypoints.length : 0,
+      created_at: null,
+      start_time: mission.startTime ? new Date(mission.startTime).toISOString() : null,
+      end_time: mission.endTime ? new Date(mission.endTime).toISOString() : null,
+      data_frequency: mission.dataFrequency,
+      sensors: mission.sensors || []
+    };
+    res.json(summary);
+  });
 
 // Org-wide analytics
 router.get('/org', (_req, res) => {
