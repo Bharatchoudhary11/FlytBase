@@ -38,11 +38,7 @@ function createMissionsRouter(io) {
       sensors
     } = req.body;
 
-
     if (!orgId || !name || !area || !altitude || !pattern) {
-
-    if (!orgId || !name || !area || !altitude || !pattern || !dataFrequency) {
-
       return res.status(400).json({ error: 'Missing required fields' });
     }
     if (
@@ -56,9 +52,6 @@ function createMissionsRouter(io) {
       dataFrequency !== undefined &&
       (typeof dataFrequency !== 'number' || dataFrequency <= 0)
     ) {
-
-    if (typeof dataFrequency !== 'number' || dataFrequency <= 0) {
-
       return res
         .status(400)
         .json({ error: 'dataFrequency must be a positive number' });
@@ -91,11 +84,7 @@ function createMissionsRouter(io) {
       altitude,
       pattern,
       overlap,
-
       dataFrequency: dataFrequency || 1,
-
-      dataFrequency,
-
       sensors: sensors || [],
       status: 'planned',
       waypoints,
