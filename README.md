@@ -18,4 +18,11 @@ This project handles mission management and reporting aspects of drone operation
 - Supports advanced mission patterns such as crosshatch and perimeter.
 - Allows mission-specific parameters like flight altitude and overlap percentage for comprehensive coverage.
 
+## API Notes
+### Mission Creation
+`POST /missions` accepts the following fields:
+- `orgId`, `name`, `area` (GeoJSON Polygon), `altitude`, `pattern`, `overlap`
+- `dataFrequency` &ndash; optional data collection frequency in hertz (defaults to `1`)
+- `sensors` &ndash; optional array of sensor identifiers to activate during the mission
+
 At FlytBase, we prioritize high-quality, reliable features over superficial coverage. Focus on thoughtful design and engineering to deliver well-crafted solutions.
