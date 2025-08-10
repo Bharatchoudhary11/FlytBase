@@ -117,7 +117,10 @@ function AnalyticsDashboard() {
             <li>
               Sensors:{' '}
               {Array.isArray(missionSummary.sensors)
-                ? missionSummary.sensors.join(', ')
+                ? missionSummary.sensors
+                    .map((s) => (typeof s === 'string' ? s : s.name || ''))
+                    .filter(Boolean)
+                    .join(', ')
                 : 'N/A'}
             </li>
           </ul>
