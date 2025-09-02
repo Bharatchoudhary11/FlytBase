@@ -31,3 +31,19 @@ codex/fix-area-to-be-a-geojson-polygon-hiwh4i
 - `sensors` &ndash; optional array of sensor identifiers to activate during the mission
 
 At FlytBase, we prioritize high-quality, reliable features over superficial coverage. Focus on thoughtful design and engineering to deliver well-crafted solutions.
+
+
+
+
+Deployed Links
+
+Backend: https://flytbase-fiib.onrender.com/
+
+Frontend: https://flytbase-1-cirp.onrender.com/
+
+How to run
+
+Verify backend endpoints in Postman using the API base URL above.
+
+Start the frontend and ensure it points to the same backend base URL.
+
