@@ -21,7 +21,7 @@ This project handles mission management and reporting aspects of drone operation
 ## API Notes
 ### Mission Creation
 `POST /missions` accepts the following fields:
-- `orgId`, `name`, `area` (GeoJSON Polygon), `altitude`, `pattern`, `overlap`
+- `orgId`, `name`, `area` (GeoJSON Polygon or Square), `altitude`, `pattern`, `overlap`
 - `dataFrequency` &ndash; optional data collection frequency in hertz (defaults to `1`)
 - `sensors` &ndash; optional array of sensor identifiers to activate during the mission
 
