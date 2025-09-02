@@ -41,12 +41,16 @@ function createMissionsRouter(io) {
     if (!orgId || !name || !area || !altitude || !pattern) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+    const areaType = (area.type || '').toLowerCase();
     if (
-      area.type !== 'Polygon' ||
+      (areaType !== 'polygon' && areaType !== 'square') ||
       (!Array.isArray(area.coordinates) && typeof area.coordinates !== 'object')
     ) {
-      return res.status(400).json({ error: 'Area must be a GeoJSON Polygon' });
+      return res
+        .status(400)
+        .json({ error: 'Area must be a GeoJSON Polygon or Square' });
     }
+    area.type = areaType.charAt(0).toUpperCase() + areaType.slice(1);
 
     if (
       dataFrequency !== undefined &&
