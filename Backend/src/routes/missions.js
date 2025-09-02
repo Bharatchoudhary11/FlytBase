@@ -16,11 +16,15 @@ function createMissionsRouter(io) {
   function normalizeCoords(input) {
     if (!input) return [];
     if (Array.isArray(input)) {
-      return Array.isArray(input[0]) ? input[0] : input;
+      return Array.isArray(input[0]) && Array.isArray(input[0][0])
+        ? input[0]
+        : input;
     }
     if (typeof input === 'object') {
       const values = Object.values(input);
-      return Array.isArray(values[0]) ? values[0] : values;
+      return Array.isArray(values[0]) && Array.isArray(values[0][0])
+        ? values[0]
+        : values;
     }
     return [];
   }
