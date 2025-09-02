@@ -22,7 +22,11 @@ This project handles mission management and reporting aspects of drone operation
 ### Mission Creation
 `POST /missions` accepts the following fields:
 - `orgId`, `name`, `area` (GeoJSON Polygon or Square), `altitude`, `pattern`, `overlap`
+codex/fix-area-to-be-a-geojson-polygon-hiwh4i
+- The `area.coordinates` field may be provided either as a GeoJSON ring (`[[[lng,lat],...]]`) or as a flat array of `[lng,lat]` pairs. The backend will close the polygon automatically if the final point is omitted.
+
 - The `area.coordinates` field may be provided either as a GeoJSON ring (`[[[lng,lat],...]]`) or as a flat array of `[lng,lat]` pairs
+
 - `dataFrequency` &ndash; optional data collection frequency in hertz (defaults to `1`)
 - `sensors` &ndash; optional array of sensor identifiers to activate during the mission
 

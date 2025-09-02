@@ -46,10 +46,13 @@ function createMissionsRouter(io) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     const areaType = (area.type || '').toLowerCase();
-    if (
-      (areaType !== 'polygon' && areaType !== 'square') ||
-      (!Array.isArray(area.coordinates) && typeof area.coordinates !== 'object')
-    ) {
+    const rawCoords = normalizeCoords(area.coordinates);
+    if (areaType !== 'polygon' && areaType !== 'square') {
+      return res
+        .status(400)
+        .json({ error: 'Area must specify type Polygon or Square' });
+    }
+    if (!rawCoords.length) {
       return res
         .status(400)
         .json({ error: 'Area must be a GeoJSON Polygon or Square' });
@@ -72,7 +75,6 @@ function createMissionsRouter(io) {
     // Support GeoJSON-style coordinate arrays as well as simple arrays or
     // objects of {lat,lng} points that may come from the frontend. Any shape
     // we cannot interpret is treated as an error instead of crashing.
-    const rawCoords = normalizeCoords(area.coordinates);
     const waypoints = generateWaypoints(rawCoords, altitude, pattern, overlap);
     if (!waypoints.length) {
       return res
