@@ -149,7 +149,9 @@ function createMissionsRouter(io) {
           start_time: new Date(mission.startTime).toISOString(),
           end_time: new Date(mission.endTime).toISOString(),
           data_frequency: mission.dataFrequency,
-          sensors: mission.sensors
+          sensors: mission.sensors,
+          status: mission.status,
+          failure_reason: mission.failureReason
         };
         reports.set(mission.id, report);
       }

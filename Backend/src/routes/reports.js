@@ -31,6 +31,8 @@ router.get('/missions/:id', (req, res) => {
           : 0;
       const summary = {
         mission_id: report.mission_id,
+        status: mission ? mission.status : report.status || null,
+        failure_reason: mission ? mission.failureReason : report.failure_reason || null,
         duration: report.duration,
         distance,
         // If the mission has been purged fall back to the coverage value stored in
@@ -50,6 +52,8 @@ router.get('/missions/:id', (req, res) => {
     const sensorList = mission.sensors || [];
     const summary = {
       mission_id: mission.id,
+      status: mission.status,
+      failure_reason: mission.failureReason,
       duration:
         mission.startTime && mission.endTime
           ? (mission.endTime - mission.startTime) / 1000

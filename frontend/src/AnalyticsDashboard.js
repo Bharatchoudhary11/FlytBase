@@ -17,6 +17,16 @@ function AnalyticsDashboard() {
   const [missionError, setMissionError] = useState(null);
   const defaultOutcomes = { success: 0, batteryFailure: 0, damageFailure: 0 };
 
+  const formatOutcome = (status, failureReason) => {
+    if (status === 'failed') {
+      if (failureReason === 'battery') return 'Battery Failure';
+      if (failureReason === 'damage') return 'Damage Failure';
+      return 'Failure';
+    }
+    if (status === 'completed') return 'Success';
+    return status || 'N/A';
+  };
+
   const fetchJson = (url) =>
     fetch(`${API_BASE_URL}${url}`).then(async (res) => {
       const contentType = res.headers.get('content-type') || '';
@@ -110,6 +120,12 @@ function AnalyticsDashboard() {
         )}
         {missionSummary && (
           <ul>
+            <li>
+              Outcome: {formatOutcome(
+                missionSummary.status,
+                missionSummary.failure_reason
+              )}
+            </li>
             <li>Duration: {missionSummary.duration}s</li>
             <li>Distance: {missionSummary.distance.toFixed(2)}m</li>
             <li>Waypoints: {missionSummary.waypoints}</li>
